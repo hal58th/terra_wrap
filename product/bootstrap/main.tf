@@ -16,11 +16,13 @@ provider "aws" {
 module "qa_s3_tfstate" {
   source      = "../../modules/s3_tfstate"
   providers   = { aws = aws.qa }
+  # Bucket name needs to be unique
   bucket_name = "terraform-tfstate-qa-abc123qwe"
 }
 
 module "prod_s3_tfstate" {
   source      = "../../modules/s3_tfstate"
   providers   = { aws = aws.prod }
+  # Bucket name needs to be unique
   bucket_name = "terraform-tfstate-prod-abc123qwe"
 }
