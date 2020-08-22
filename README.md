@@ -15,6 +15,7 @@ terraform apply -var-file env/qa.tfvars -input=false
 ```
 
 #### Help File of `terra_wrap`
+Note: `terra_wrap` file is located in docker directory.
 ```bash
 Usage: terra_wrap <environment> <apply|output|destroy|plan|apply-plan|destroy-jenkins>
 
@@ -47,7 +48,7 @@ terra_wrap qa destroy
 ``` 
 
 ## Running Terraform
-Using this repo layout, you don't need to install Terraform to run it.
+Using this repo layout, you don't need to install Terraform or the `terra_wrap` command.
 A custom docker container is created to help control the Terraform version and lets you add any software you wish.
 You will build and run the docker container by running the command:
 ```bash
