@@ -2,7 +2,7 @@
 Terraform does not manage environments in a great way.
 You almost always have to supply a "var-file" and sometimes a "backend-config" file.
 This is where the `terra_wrap` wrapper script to the `terraform` command comes in.
-It was written to simplify having multiple environments and make less mistakes.
+It is used to simplify having multiple environments and make less mistakes.
 
 Running the command:
 ```bash
@@ -40,27 +40,7 @@ If you are following this repo layout, then first you need change directory into
 cd product/product_foo
 terra_wrap qa apply
 ```
-Additionally, before you create a PR, you should format all the Terraform files.
-This can be done by running `make format` in the `terraform` directory.
-When you don't want the environment anymore, just run destroy.
+When you don't want the environment anymore, just run destroy as usual.
 ```
 terra_wrap qa destroy
 ``` 
-
-## Running Terraform
-Using this repo layout, you don't need to install Terraform or the `terra_wrap` command.
-A custom docker container is created to help control the Terraform version and lets you add any software you wish.
-You will build and run the docker container by running the command:
-```bash
-make run
-```
-If you use an IDE to write your code, you will still have to install Terraform.
-
-## Setting up AWS Credentials (If using AWS)
-[First you must install the aws cli client.](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-mac.html)
-```
-```bash
-aws configure --profile (PROFILE-NAME)
-```
-This will prompt you for your secret access key. [Where to get your secret access key.](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys)
-
