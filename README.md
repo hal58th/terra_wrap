@@ -15,8 +15,7 @@ terraform apply -var-file env/qa.tfvars -input=false
 ```
 
 #### Help File of `terra_wrap`
-Note: `terra_wrap` file is located in docker directory.
-```bash
+```
 Usage: terra_wrap <environment> <apply|output|destroy|plan|apply-plan|destroy-jenkins>
 
 Typically you would only use the options 'apply, output or destroy'.
