@@ -14,6 +14,10 @@ terraform init -backend-config env/qa.backend.tfvars -reconfigure
 terraform apply -var-file env/qa.tfvars -input=false
 ```
 
+#### Environment Management
+To see an example of the environment layout, look at [terraform_repo_layout](https://github.com/hal58th/terraform_repo_layout/tree/master/product/product_bar/env)
+An environment has a `<env_name>.tfvars` file and `<env_name>.backend.tfvars` file.
+
 #### Help File of `terra_wrap`
 ```
 Usage: terra_wrap <environment> <apply|output|destroy|plan|apply-plan|destroy-jenkins>
