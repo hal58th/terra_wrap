@@ -1,24 +1,24 @@
-#!/bin/ash
+#!/bin/bash
 
-## Written by Carl Meyers
+## Written by Carl Meyers on July 9, 2020
 ## Description: This program is a wrapper script for some Terraform commands. Because we have to set the "backend" per environment,
 ##   I decided that creating a wrapper script was the easiest way not to forget to set these extra options.
-##   Typically you would only run "terra_wrap qa apply" or "terra_wrap qa destroy".
+##   Typically you would only run "terra_wrap dev1 apply" or "terra_wrap dev1 destroy".
 
 if [ $# -eq 0 ]
   then
     echo "Usage: terra_wrap <environment> <apply|output|destroy|plan|apply-plan|destroy-jenkins>"
     echo ""
-    echo "Typically you would only use the options 'apply, output or destroy'."
-    echo "Example: 'terra_wrap qa apply' and 'terra_wrap qa destroy'"
+    echo "Typically you would only use the options 'apply, output or destroy' and should only be using the test environments 'dev1' and 'dev2'"
+    echo "Example: 'terra_wrap dev1 apply' and 'terra_wrap dev1 destroy'"
     echo ""
-    echo "Environments: qa, prod. You can add your own by adding variable files."
+    echo "Environments: dev1, dev2, qa, prod"
     echo ""
     echo "Options:"
     echo "  apply: Used by Developers - It will both 'init' the backend and 'apply' your changes. It will create the environment if it does not exist."
     echo "  output: Used by Developers - Exact same as 'terraform output' which will show you all outputs in this directory."
     echo "  destroy: Used by Developers - Destroys the entire environment specified but will prompt first."
-    echo "  console: Used by Developers - Test your expressions against that environments variable file."
+    echo "  console: Used by Developers - Test your expressions against that environment's variable file."
     echo "  plan: Used by Jenkins - Creates a plan file that you can 'apply' at a later date."
     echo "  apply-plan: Used by Jenkins - Applies a plan without any prompt."
     echo "  destroy-jenkins: Used by Jenkins - Destroys the environment without any prompt."
@@ -26,7 +26,7 @@ if [ $# -eq 0 ]
 fi
 
 ## Unfortunately it's possible to "init" one environment and then "apply" it to another environment,
-##   which would mess up the second environments state file.
+##   which would mess up the second environment's state file.
 ##   Therefore I combined the "init" and "apply" into just the "apply" command which hopefully just adds a few seconds to execution.
 
 terraform_init ()
@@ -34,38 +34,51 @@ terraform_init ()
   echo "Running command: terraform init -backend-config env/${environment}.backend.tfvars -reconfigure >&2"
   terraform init -backend-config env/"${environment}".backend.tfvars -reconfigure >&2
 }
+deletion_prevention (){
+  if [[ "${environment}" == @(qa|prod) ]]; then
+    echo "You probably didn't mean to delete \"${environment}\" and I'm not going to let you."
+    echo -e "If you really want to destroy this environment, run the following commands:\n"
+    echo "terraform init -backend-config env/${environment}.backend.tfvars -reconfigure"
+    echo -e "terraform destroy ${ENV_VAR_FILES}\n"
+    exit 1
+  fi
+}
 
 environment=${1}
 terraform_command=${2}
 
+ENV_VAR_FILES="-var-file env/${environment}.tfvars -var-file env/${environment}-version.tfvars"
+
 if [[ "${terraform_command}" == "apply" ]]; then
   terraform_init
-  echo "Running command: terraform apply -var-file env/${environment}.tfvars -input=false"
-  terraform apply -var-file env/"${environment}".tfvars -input=false
+  echo "Running command: terraform apply ${ENV_VAR_FILES} -input=false"
+  terraform apply ${ENV_VAR_FILES} -input=false
 
 elif [[ "${terraform_command}" == "output" ]]; then
   terraform_init
-  terraform output
+  terraform output -json | jq 'with_entries(.value |= .value)'
 
 elif [[ "${terraform_command}" == "destroy" ]]; then
+  deletion_prevention
   terraform_init
-  terraform destroy -var-file env/"${environment}".tfvars
+  terraform destroy ${ENV_VAR_FILES}
 
 elif [[ "${terraform_command}" == "console" ]]; then
   terraform_init
-  terraform console -var-file env/"${environment}".tfvars
+  terraform console ${ENV_VAR_FILES}
 
 elif  [[ "${terraform_command}" == "plan" ]]; then
   terraform_init
-  terraform plan -var-file env/"${environment}".tfvars -out="${environment}"-terraform-plan -input=false
+  terraform plan ${ENV_VAR_FILES} -out="${environment}"-terraform-plan -input=false
 
 elif [[ "${terraform_command}" == "apply-plan" ]]; then
   terraform_init
   terraform apply "${environment}"-terraform-plan && rm "${environment}"-terraform-plan
 
 elif [[ "${terraform_command}" == "destroy-jenkins" ]]; then
+  deletion_prevention
   terraform_init
-  terraform destroy -var-file env/"${environment}".tfvars -auto-approve
+  terraform destroy ${ENV_VAR_FILES} -auto-approve
 
 else
   echo "You didn't enter a valid option or you entered the option first, and not the environment."
